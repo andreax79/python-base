@@ -1,21 +1,41 @@
 SHELL=/bin/bash -e
+PROJECT=todo
 
 help:
-	@echo - make isort
-	@echo - make black
-	@echo - make clean
-	@echo - make venv
+	@echo - make ruff ------- Format code and sort imports
+	@echo - make lint ------- Run lint
+	@echo - make typecheck -- Typecheck
+	@echo - make test ------- Run test
+	@echo - make coverage --- Run tests coverage
+	@echo - make clean ------ Clean virtual environment
+	@echo - make venv ------- Create virtual environment
 
-isort:
-	isort --profile black *.py
+.PHONY: ruff
+ruff:
+	uv run ruff format $(PROJECT) tests
 
-black: isort
-	black *.py
+.PHONY: lint
+lint:
+	uv run ruff check $(PROJECT) tests
 
+.PHONY: typecheck
+typecheck:
+	uv run mypy --strict --no-warn-unused-ignores $(PROJECT)
+
+.PHONY: coverage
+coverage:
+	uv run pytest --cov --cov-report=term-missing
+
+.PHONY: test
+test:
+	uv run pytest
+
+.PHONY: clean
 clean:
-	-rm -rf build dist bin lib lib64 include share pyvenv.cfg *.egg-info
+	-rm -rf build dist .venv *.egg-info
 
+.PHONY: venv
 venv:
-	python3 -m venv . || python3 -m virtualenv .
-	. bin/activate; pip install -Ur requirements.txt
-	. bin/activate; pip install -Ur requirements-dev.txt
+	uv venv
+	uv pip install -e .
+	uv pip install -e ".[dev]"
